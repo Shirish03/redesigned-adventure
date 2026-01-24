@@ -40,20 +40,13 @@ recovery key escrow.
 
 ### High-Level Flow
 
-User enables BitLocker on USB
-↓
-Event ID 846 generated (backup failure)
-↓
-Event-triggered Scheduled Task
-↓
-PowerShell script parses event
-↓
-Drive letter extracted
-↓
-Recovery key identified via manage-bde
-↓
-Recovery key backed up to Entra ID
-
+1. User enables BitLocker on a USB drive
+2. Windows logs Event ID 846 indicating recovery key backup failure
+3. An event-triggered scheduled task is invoked
+4. PowerShell script parses the event data
+5. The removable drive letter is extracted
+6. Recovery key information is retrieved using `manage-bde`
+7. Recovery key is backed up to Entra ID
 
 ---
 
