@@ -119,13 +119,28 @@ Handles deployment by:
 
 ---
 
-## Scope & Disclaimer
+## Scope
 
-- All scripts are **sanitized and illustrative**
-- Tenant-specific identifiers and production values are removed
-- The repository demonstrates a **design pattern**, not a turnkey solution
+This repository documents a design pattern for handling BitLocker-to-Go
+recovery key escrow in Hybrid Entra ID environments where native behavior
+is inconsistent.
 
-This content is provided for educational and design discussion purposes only.
+The scripts are intentionally focused on illustrating control flow
+and system behavior, not providing a turnkey deployment package.
+
+---
+
+## Disclaimer
+
+This solution is provided as a reference implementation and design pattern.
+It has been validated in a specific Hybrid Entra ID and Intune-managed
+environment and may require adaptation for other configurations.
+
+There is no guarantee that this approach will function identically
+in all environments. Administrators should review, test, and validate
+the behavior in a controlled setting before any production use.
+
+Use at your own discretion.
 
 ---
 
