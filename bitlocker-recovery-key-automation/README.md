@@ -1,51 +1,137 @@
-# BitLocker-to-Go Recovery Key Escrow – Event-Driven Design
+# BitLocker-to-Go Recovery Key Escrow (Hybrid Entra ID)
 
-## Overview
+## Background
 
-While backing up **OS drive** BitLocker recovery keys to Entra ID is well supported today,  
-**BitLocker-to-Go recovery key escrow for removable media** remains a gray area in **Hybrid Entra ID and Intune-managed Windows environments**.
+While backing up OS drive BitLocker recovery keys to Entra ID is
+well supported today, BitLocker-to-Go recovery key escrow remains
+a gray area when devices are **Hybrid Entra ID Joined and Intune managed**.
 
-In regulated environments where:
-- BitLocker is mandatory for removable media
-- USB usage cannot be fully disabled
-- Devices are cloud-managed
+Although Group Policy and Intune CSPs exist to configure recovery
+key backup behavior, Windows 10/11 does not natively and reliably
+escrow **removable drive** recovery keys to Entra ID in this scenario.
 
-this creates an important **design gap**:
-
-> How do we reliably back up BitLocker-to-Go recovery keys without relying on end users?
-
-This repository demonstrates an **event-driven, system-level approach** to address that gap.
+This project documents a **design gap** identified during the
+migration of an enterprise endpoint security control, and presents
+a practical, event-driven workaround.
 
 ---
 
-## Problem Statement
+## Observed Platform Behavior
 
-When BitLocker-to-Go is enforced via policy, recovery key backup attempts may fail under certain conditions, resulting in:
+When a user enables BitLocker on a removable USB drive on a
+Hybrid Entra ID Joined device, Windows generates the following event:
 
-- Recovery keys not being escrowed centrally
-- Dependence on end users to save recovery information
-- Gaps in auditability and recovery readiness
+- **Log:** Microsoft-Windows-BitLocker-API/Management  
+- **Event ID:** 846  
+- **Behavior:**  
+  - Indicates failure to back up the BitLocker-to-Go recovery key
+    to Entra ID
+  - Includes the affected removable drive letter
 
-Windows logs this condition using:
-
-- **Event ID 846**  
-  *(BitLocker recovery key backup failure)*
-
-This solution reacts to that signal and **automatically retries recovery key escrow** in a controlled and auditable way.
-
----
-
-## Design Principles
-
-This solution was built with the following principles:
-
-- **Event-driven** – React only when a failure is detected
-- **User-independent** – Runs as SYSTEM
-- **Minimal surface area** – Uses native Windows and BitLocker components
-- **Separation of concerns** – Deployment, trigger, and logic are distinct
-- **Public-safe** – No org-specific configuration or secrets
+This failure event becomes the **trigger point** for the solution.
 
 ---
 
-## High-Level Architecture
+## Solution Overview
+
+The solution implements an **automated retry mechanism** that reacts
+to the BitLocker API failure event and programmatically performs
+recovery key escrow.
+
+### High-Level Flow
+
+User enables BitLocker on USB
+↓
+Event ID 846 generated (backup failure)
+↓
+Event-triggered Scheduled Task
+↓
+PowerShell script parses event
+↓
+Drive letter extracted
+↓
+Recovery key identified via manage-bde
+↓
+Recovery key backed up to Entra ID
+
+
+---
+
+## Technical Design
+
+### 1. Event-Triggered Scheduled Task
+
+An event-triggered scheduled task is created using the XML definition:
+
+- `BitLockerToGo-Escrow-Retry.xml`
+
+The task triggers immediately when **Event ID 846** is logged under
+the BitLocker API management channel and launches a PowerShell script.
+
+---
+
+### 2. Recovery Key Escrow Script
+
+The script:
+
+- `BTG_RecoveryKey_Escrow_Retry.ps1`
+
+Performs the following actions:
+
+- Queries the BitLocker API event log for Event ID 846
+- Extracts the removable drive letter from the event data
+- Executes `manage-bde` to identify the recovery password protector
+- Uses `Get-BitLockerVolume` with the extracted protector ID
+- Retries backing up the BitLocker-to-Go recovery key to Entra ID
+
+This avoids reliance on end-user actions and compensates for the
+initial escrow failure.
+
+---
+
+### 3. Installation & Registration Script
+
+A helper script:
+
+- `Install-BTGRecoveryKeyEscrow.ps1`
+
+Handles deployment by:
+
+- Copying the recovery script to a secure local path
+- Registering the event-triggered scheduled task using the XML file
+- Ensuring consistent behavior across Hybrid Entra ID devices
+
+---
+
+## Repository Contents
+
+- `scripts/`  
+  PowerShell scripts implementing detection, retry, and installation logic
+
+- `tasks/`  
+  XML definition for the event-triggered scheduled task
+
+- `docs/`  
+  Architecture diagrams and flow documentation
+
+- `examples/`  
+  Sanitized configuration samples and illustrative output
+
+---
+
+## Scope & Disclaimer
+
+- All scripts are **sanitized and illustrative**
+- Tenant-specific identifiers and production values are removed
+- The repository demonstrates a **design pattern**, not a turnkey solution
+
+This content is provided for educational and design discussion purposes only.
+
+---
+
+## Key Takeaway
+
+Endpoint security controls do not always fail loudly.
+Sometimes, they fail *quietly* — and closing those gaps requires
+understanding system behavior, not just configuring policies.
 
