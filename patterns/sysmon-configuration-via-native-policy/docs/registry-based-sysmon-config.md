@@ -68,6 +68,7 @@ This pattern leverages Sysmon's registry-backed configuration mechanism and nati
        | configuration via policy  |
        | refresh cycles            |
        +---------------------------+
+```
 
 **Step Details:**
 
