@@ -1,18 +1,49 @@
-# Redesigned Adventure
+# redesigned-adventure
 
-This repository documents real-world endpoint security automation
-patterns observed in cloud-managed Windows environments
-(Hybrid Entra ID and Intune).
+A collection of endpoint security automation patterns and design explorations
+for modern, cloud-managed Windows environments.
 
-The focus is on identifying design gaps, operational constraints,
-and practical automation approaches in regulated enterprise setups.
+This repository serves as a workspace for documenting real-world security
+control gaps encountered during endpoint modernization, along with
+event-driven and operationally practical approaches used to address them.
 
-## Projects
+The focus is not on turnkey tooling, but on **patterns, behavior, and design
+decisions** that emerge in complex enterprise environments.
 
-### 🔐 BitLocker-to-Go Recovery Key Automation
-Explores a design gap around recovery key escrow for removable
-media and demonstrates an event-driven, automated approach.
+---
 
-➡️ ./bitlocker-recovery-key-automation
+## Current Projects
 
-More projects will be added over time.
+### 🔐 Hybrid Entra ID – BitLocker-to-Go Key Escrow Pattern
+
+**Folder:** `hybrid-entra-btg-key-escrow-pattern`
+
+Documents an event-driven approach to handling BitLocker-to-Go recovery key
+escrow failures on Hybrid Entra ID joined Windows devices, where native
+Intune and policy-based behavior may be inconsistent.
+
+Key concepts explored:
+- Observing BitLocker API failure events
+- Event-triggered remediation via scheduled tasks
+- Programmatic recovery key identification
+- Retrying escrow without relying on end-user action
+
+---
+
+## Repository Philosophy
+
+- Focus on **design patterns**, not just scripts
+- Prefer **event-driven automation** over polling
+- Assume **enterprise constraints** (change control, audits, limited agents)
+- Avoid embedding tenant-specific or sensitive information
+
+---
+
+## Disclaimer
+
+Content in this repository is provided as reference material and
+design guidance. Implementations may require adaptation based on
+environment, configuration, and security requirements.
+
+Always validate behavior in a controlled environment before
+production use.
