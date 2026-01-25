@@ -41,32 +41,33 @@ This pattern leverages Sysmon's registry-backed configuration mechanism and nati
 
 ### Approach Steps
 
-   +---------------------------+
-   | Validated Sysmon XML      |
-   | configuration imported on |
-   | reference system          |
-   +------------+--------------+
-                |
-                v
-   +---------------------------+
-   | Registry value extracted  |
-   | from:                     |
-   | HKLM\SYSTEM\...\Rules     |
-   +------------+--------------+
-                |
-                v
-   +---------------------------+
-   | Policy object created     |
-   | with binary registry      |
-   | value (GPO / Policy)      |
-   +------------+--------------+
-                |
-                v
-   +---------------------------+
-   | Target systems receive    |
-   | configuration via policy  |
-   | refresh cycles            |
-   +---------------------------+
+```text
+       +---------------------------+
+       | Validated Sysmon XML      |
+       | configuration imported on |
+       | reference system          |
+       +------------+--------------+
+                    |
+                    v
+       +---------------------------+
+       | Registry value extracted  |
+       | from:                     |
+       | HKLM\SYSTEM\...\Rules     |
+       +------------+--------------+
+                    |
+                    v
+       +---------------------------+
+       | Policy object created     |
+       | with binary registry      |
+       | value (GPO / Policy)      |
+       +------------+--------------+
+                    |
+                    v
+       +---------------------------+
+       | Target systems receive    |
+       | configuration via policy  |
+       | refresh cycles            |
+       +---------------------------+
 
 **Step Details:**
 
