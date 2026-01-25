@@ -1,34 +1,26 @@
-# Registry-Based Sysmon Configuration via Group Policy
+# Registry-Based Sysmon Configuration via Native Policy
 
-## Background
+## Context
 
-Originally, Sysmon configuration updates were delivered as part of a deployment package that included:
+Sysmon is a host-based telemetry tool that extends native Windows logging by providing detailed visibility into process execution, network activity, and other system behaviors. While the Sysmon binary itself is typically deployed once and remains stable over long periods, its configuration defines what is observed and how events are generated. As detection strategies evolve in response to new threats, environmental changes, and operational priorities, Sysmon configuration requires periodic updates to remain effective and relevant.
 
-- Sysmon installer
-- Updated Sysmon configuration file (`config.xml`)
+In many environments, configuration updates are delivered alongside the Sysmon binary through deployment mechanisms. While functional, this approach can introduce unnecessary coupling between binary lifecycle management and configuration changes.
 
-These packages were rebuilt and redeployed whenever Cyber Operations released an updated configuration, typically on a monthly cadence.
-
-While functional, this approach introduced unnecessary operational friction and delayed the rollout of updated detection logic.
+This document describes a pattern that decouples Sysmon configuration delivery from binary deployment by leveraging Sysmon’s registry-backed configuration model and native Windows policy mechanisms.
 
 ---
 
-## Observations
+## Key Observation
 
-During analysis, it was identified that once a Sysmon configuration is imported, the effective configuration is stored locally in the registry rather than being continuously read from the XML file.
+When a Sysmon configuration is imported, the effective configuration is persisted locally in the Windows registry. Sysmon consumes this registry-backed representation at runtime rather than continuously referencing the original XML configuration file.
 
-Specifically:
-
-- Sysmon configuration rules are persisted as a binary registry value
-- This registry-backed representation is what Sysmon actively consumes at runtime
-
-This opened the door to managing configuration independently of binary deployment.
+Understanding this behavior allows configuration management to be approached independently from software deployment.
 
 ---
 
 ## Registry Location
 
-The Sysmon configuration is stored at:
+Sysmon configuration rules are stored at:
 
 - **Registry Key**  
   `HKLM\SYSTEM\CurrentControlSet\Services\SysmonDrv\Parameters`
@@ -43,48 +35,94 @@ The `Rules` value contains the compiled representation of the Sysmon configurati
 
 ---
 
-## Design Approach
+## High-Level Approach
 
-The updated approach follows these steps:
+This pattern leverages Sysmon's registry-backed configuration mechanism and native policy delivery to maintain consistent endpoint telemetry.
 
-1. A freshly updated Sysmon configuration file is imported on a reference system
-2. The resulting registry value (`Rules`) is captured from the reference system
-3. A dedicated Group Policy Object (GPO) is created
-4. Using Group Policy Preferences, the `Rules` registry value is defined in the GPO
-5. The policy is linked to target systems, allowing configuration updates to be delivered via standard policy refresh
+### Approach Steps
 
-This effectively transposes Sysmon configuration management from an XML-based deployment model to a registry-based policy model.
+   +---------------------------+
+   | Validated Sysmon XML      |
+   | configuration imported on |
+   | reference system          |
+   +------------+--------------+
+                |
+                v
+   +---------------------------+
+   | Registry value extracted  |
+   | from:                     |
+   | HKLM\SYSTEM\...\Rules     |
+   +------------+--------------+
+                |
+                v
+   +---------------------------+
+   | Policy object created     |
+   | with binary registry      |
+   | value (GPO / Policy)      |
+   +------------+--------------+
+                |
+                v
+   +---------------------------+
+   | Target systems receive    |
+   | configuration via policy  |
+   | refresh cycles            |
+   +---------------------------+
+
+**Step Details:**
+
+1. **Import configuration on reference system**  
+   - A tested Sysmon XML is loaded to ensure all rules work correctly.
+
+2. **Extract registry value**  
+   - The imported configuration is persisted in the binary registry value `HKLM\SYSTEM\CurrentControlSet\Services\SysmonDrv\Parameters\Rules`.
+
+3. **Create centralized policy object**  
+   - Define this registry value in a Group Policy Object or equivalent policy mechanism for consistent distribution.
+
+4. **Deliver to endpoints**  
+   - Target systems automatically apply updates during standard policy refresh cycles, removing reliance on manual or package-based deployments.
+
+**Summary:** Test once, extract from the registry, distribute via policy, and let endpoints apply updates automatically.
 
 ---
 
 ## Benefits
 
-This approach provides multiple advantages:
+Adopting this pattern provides several advantages:
 
-- **Eliminates repeated packaging**
-  Sysmon binaries no longer need to be redeployed for configuration-only changes
+- **Decoupled lifecycles**  
+  Sysmon binaries and configuration can be managed independently
 
-- **Improves consistency**
-  All domain-joined systems receive Group Policy, reducing drift caused by failed software deployments
+- **Improved consistency**  
+  Configuration delivery leverages reliable, existing policy refresh mechanisms
 
-- **Accelerates response**
-  Configuration updates can be rolled out faster during threat response or tuning cycles
+- **Faster iteration**  
+  Detection logic can be updated without waiting for software redeployment cycles
 
-- **Aligns with native controls**
-  No additional tooling or agents are introduced
+- **Reduced operational overhead**  
+  Fewer moving parts in the deployment process
 
 ---
 
-## Operational Considerations
+## Considerations
 
-- Configuration validation should occur before registry values are distributed
-- Improper configuration may increase event volume or impact performance
-- Change tracking and versioning of registry values is recommended
+- Configuration should be validated prior to policy distribution
+- Improper configuration may increase event volume or resource usage
+- Change control and version tracking of configuration data is recommended
+
+### Performance and Policy Considerations
+
+This approach leverages centralized policy refresh to deliver Sysmon configuration updates via the registry. Since the Sysmon configuration is stored as a **binary registry value**, the size of this value grows with the number and complexity of rules, filters, and parameters defined in the configuration.
+
+As a result:
+
+- On systems targeted by multiple policies, or when the registry value is particularly large, policy processing and refresh operations may take longer than usual.
+- This effect is a natural consequence of registry-backed configuration delivery and is not specific to Sysmon itself.
+
+While typically transient, this behavior should be considered when planning large-scale deployments or frequent configuration updates. Administrators should balance the level of detail in the Sysmon configuration with operational considerations for policy application performance.
 
 ---
 
 ## Summary
 
-By leveraging Sysmon’s registry-backed configuration model and native Group Policy delivery, this pattern improves security agility while reducing operational overhead.
-
-The focus is not on bypassing standard deployment practices, but on using existing Windows mechanisms more effectively.
+By leveraging Sysmon’s registry-backed configuration model and native policy delivery, this pattern enables more agile and reliable configuration management while remaining aligned with standard Windows operational practices.
