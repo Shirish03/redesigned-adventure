@@ -40,6 +40,22 @@ recovery key escrow.
 
 ### High-Level Flow
 
+```mermaid
+flowchart TB
+    A[User enables BitLocker on USB drive]
+    B[Windows logs Event ID 846]
+    C[Event-triggered Scheduled Task]
+    D[PowerShell Escrow Script]
+    E[manage-bde / Get-BitLockerVolume]
+    F[Recovery Key backed up to Entra ID]
+
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+```
+
 1. User enables BitLocker on a USB drive
 2. Windows logs Event ID 846 indicating recovery key backup failure
 3. An event-triggered scheduled task is invoked
