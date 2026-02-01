@@ -12,7 +12,7 @@ decisions** that emerge in complex enterprise environments.
 
 ---
 
-## Current Patterns
+## Documented Patterns
 
 ### Hybrid Entra ID – BitLocker-to-Go Key Escrow
 
@@ -67,7 +67,6 @@ registry-backed policies, removing the need for repeated package deployments.
        | refresh cycles            |
        +---------------------------+
 ```
----
 
 ## Benefits
 - Centralized, repeatable deployment of Sysmon rules
@@ -77,6 +76,41 @@ registry-backed policies, removing the need for repeated package deployments.
 ## Considerations
 - Large configurations may slow policy refresh cycles
 - Only tested configurations should be applied to avoid unintended behavior
+
+---
+
+### Serverless Windows Provisioning Using WICD
+
+**Folder:** `patterns/serverless-windows-provisioning-wicd`
+
+Documents a **serverless, infrastructure-free Windows provisioning pattern**
+using Windows Imaging and Configuration Designer (WICD).
+
+This pattern is intentionally scoped for scenarios where modern provisioning
+platforms (e.g. Autopilot + Intune) are unavailable, unnecessary, or
+intentionally avoided.
+
+**Typical use cases include:**
+- Small offices with a limited number of workstations
+- Training labs or classroom environments
+- Temporary or disposable devices
+- Offline or restricted-network deployments
+- Workgroup-based systems requiring baseline security and configuration
+
+The approach focuses on **cost-free provisioning**, minimal dependencies,
+and predictable outcomes using native Windows tooling only.
+
+**Key concepts explored:**
+- Serverless OS provisioning without imaging infrastructure
+- Use of provisioning packages (`.ppkg`) for configuration and app setup
+- Security-first provisioning (BitLocker, baseline hardening)
+- User-driven setup without persistent management services
+- Clear boundaries where modern cloud provisioning *does* and *does not* apply
+
+This pattern is not presented as a replacement for Autopilot, but as a
+**complementary design option** for constrained or transitional environments.
+
+---
 
 ## Repository Philosophy
 - Focus on **design patterns**, not just scripts
