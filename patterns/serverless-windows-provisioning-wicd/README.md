@@ -1,5 +1,5 @@
 # Serverless Windows Provisioning with WICD
-## An Engineering Narrative
+## A Practical Reference for Serverless Windows Provisioning
 
 This project documents a **serverless Windows provisioning pattern** built using **Windows Imaging and Configuration Designer (WICD)**. It is intended for scenarios where full cloud-based provisioning (like Autopilot) is unnecessary, unavailable, or excessive.
 
